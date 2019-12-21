@@ -1,0 +1,13 @@
+function isInt = isFiInteger(u,wordLengthVec) %#codegen
+    %isFiInteger is fi object integer with specified word lengths
+    
+    %   Copyright 2019 The MathWorks, Inc.
+    
+    coder.inline('always');
+
+    isInt = coder.const(...
+        isfi(u) && ...
+        isfixed(u) && ...
+        any(u.WordLength == wordLengthVec) && ...
+        isFiScalingTrivial(u));
+end
