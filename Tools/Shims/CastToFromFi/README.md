@@ -1,8 +1,12 @@
 The functions in this folder make it easy to cast from built-in MATLAB integers to their equivalent 
 fi objects and back in the other direction.
+
    castIntToFi
+   
    castFiToInt
+   
    cast64BitIntToFi
+   
    cast64BitFiToInt
 
 These functions are especially useful for dealing with input and output signals inside MATLAB Function Block,
@@ -12,8 +16,8 @@ These functions also make it easier to deal with pending R2020a changes
 to handling of 64 bit integer inside MATLAB Function Block and MATLAB System Block.
 
 Functions by the same names will ship with R2020a.
-In R2020a and later, you should use the shipping versions.
-To use the shim versions in this folder, in R2019b and earlier, 
+In R2020a and newer, you should use the shipping versions.
+To use the shim versions in this folder, in R2019b and older, 
 simply put this folder on your MATLAB path. 
 
 Availabily of these shims for older releases allow you to use the same models across older and newer releases.
