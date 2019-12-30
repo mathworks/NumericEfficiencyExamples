@@ -4,17 +4,17 @@ function dispBinPedanticInType(varargin)
     %   and minimum bit spans
     %
     % Example
-    %   dispBinPedantic(5.125,-3.5)
+    %   dispBinPedanticInType(uint(24,96))
     %
-    % Negative values present: Two's Complement Encoding shown
-    %                  Bit Column Weights
-    %  -----  -----  -----  -----  -----  -----  -----
-    %   -2^3   2^2    2^1    2^0    2^-1   2^-2   2^-3     Real World Value
-    %    -8     4      2      1     0.5    0.25  0.125
-    %  -----  -----  -----  -----  -----  -----  -----
-    %    0      1      0      1      0      0      1     =   5.125
-    %    1      1      0      0      1      0      0     =  -3.5
-    
+    % All values non-negative: Unsigned Encoding shown
+    %             Bit Column Weights
+    %  ---  ---  ---  ---  ---  ---  ---  ---
+    %  2^7  2^6  2^5  2^4  2^3  2^2  2^1  2^0     Real World Value
+    %  128   64   32   16   8    4    2    1
+    %  ---  ---  ---  ---  ---  ---  ---  ---
+    %   0    0    0    1    1    0    0    0    =  24
+    %   0    1    1    0    0    0    0    0    =  96
+
     % Copyright 2019 The MathWorks, Inc.
 
     dispVarious(struct('preferFormat','Pedantic','InType',true),varargin{:});

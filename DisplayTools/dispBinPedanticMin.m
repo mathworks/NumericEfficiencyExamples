@@ -3,7 +3,7 @@ function dispBinPedanticMin(varargin)
     %   columns will be based minimum bit spans unioned across all values
     %
     % Example
-    %   dispBinPedantic(5.125,-3.5)
+    %   dispBinPedanticMin(5.125,-3.5)
     %
     % Negative values present: Two's Complement Encoding shown
     %                  Bit Column Weights
