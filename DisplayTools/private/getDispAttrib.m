@@ -1,7 +1,7 @@
 function s = getDispAttrib(s)
     %getDispAttrib get display attributes
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
     
     s.dispAttrib.actualMaxPow2Wt = s.Attrib.maxPow2Wt;
     s.dispAttrib.actualMinPow2Wt = s.Attrib.minPow2Wt;

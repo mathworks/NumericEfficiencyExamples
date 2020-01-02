@@ -1,7 +1,7 @@
 function dispVarious(varargin)
     %dispBinPt binary point display of input values
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
     
     [opt,uNumeric] = splitOptionsFromNumerics(varargin{:});
     
@@ -9,49 +9,53 @@ function dispVarious(varargin)
     
     nTot = getNumRealScalars(uNumeric{:});
     
-    s.Attrib = groupNumAttrib();
+    s.Attrib = groupNumAttrib('init');
     
     s.opt = setDefaultOptions(opt);
     
-    s.v = repmat(struct(),nTot,1);
-    s.origTypes = cell(1,nNumeric);
+    s.vals = repmat(struct(),nTot,1);
+    s.Attrib.origTypes = cell(1,nNumeric);
     
     idxScalar = 1;
     for iIn = 1:nNumeric
         u = uNumeric{iIn};
-        s.origTypes{iIn} = fixed.internal.type.extractNumericType(u);
+        s.Attrib.origTypes{iIn} = getInputType(u);
         [s,idxScalar] = processNumericInput(s,idxScalar,u);
     end
-    s.Attrib = groupNumAttrib(s.Attrib); % finalize
+    s.Attrib = groupNumAttrib('finalize',s.Attrib,s.Attrib.origTypes,uNumeric,nTot); % finalize
     
-    s.vOvercoat = castAllToType(s.Attrib.overcoatType,uNumeric,nTot);
-    s.vOvercoat = fixed.internal.type.tightFi(s.vOvercoat);
-    s.Attrib.overcoatType = numerictype(s.vOvercoat);
-    s.Attrib.minPow2Wt = s.Attrib.overcoatType.FixedExponent;
 
     if s.opt.InType
-        overcoat2 = s.Attrib.overcoatType;
-        for iIn = 1:nNumeric
-            overcoat2 = dtPairToOvercoat(overcoat2,s.origTypes{iIn});
-        end
-        s.Attrib.overcoatType = overcoat2;
-        fe = s.Attrib.overcoatType.FixedExponent;
-        wl = s.Attrib.overcoatType.WordLength;
+        % Use combined overcoat type for display
+        %
+        fe = s.Attrib.typeOvercoatCombined.FixedExponent;
+        wl = s.Attrib.typeOvercoatCombined.WordLength;
         s.Attrib.minPow2Wt = fe;
         s.Attrib.maxPow2Wt = wl - 1 + fe;
-        s.vOvercoat = castAllToType(s.Attrib.overcoatType,uNumeric,nTot);
+        s.Attrib.valsInOvercoatType = castAllToType(s.Attrib.typeOvercoatCombined,uNumeric,nTot);
     end        
      
     s = getDispAttrib(s);
     
+    % Get maximum chars for real world value
+    %
+    ncRWV = 10;
+    for i = 1:numel(s.vals)
+        rwvStr = fmtRWV(s,s.vals(i));
+        ncRWV = max(ncRWV,length(rwvStr));
+    end
+    s.dispAttrib.nCharsRWV = ncRWV;
+    
     if s.Attrib.anyNegative
-        fprintf('\nNegative values present: Two''s Complement Encoding shown\n');
+        fprintf('\nNegative values present: Two''s Complement Encoding shown\n\n');
     else
-        fprintf('\nAll values non-negative: Unsigned Encoding shown\n');
+        fprintf('\nAll values non-negative: Unsigned Encoding shown\n\n');
     end
 
     if s.dispAttrib.usePedantic
         s = dispPedanticHeader(s);
+    else
+        s = dispBinHeader(s);
     end
         
     for i=1:nTot
@@ -59,20 +63,6 @@ function dispVarious(varargin)
     end
 end
 
-
-function y = castAllToType(overcoatType,uNumeric,nTot)
-    y = fi(zeros(nTot,1),overcoatType);
-    idxScalar = 1;
-    nNumeric = numel(uNumeric);
-    for iIn = 1:nNumeric
-        u = uNumeric{iIn};
-        n = numel(u);
-        for j=1:n
-            y(idxScalar) = u(j);
-            idxScalar = idxScalar + 1;
-        end
-    end
-end
 
 function opt = setDefaultOptions(opt)
 
@@ -96,10 +86,10 @@ end
 function rwvStr = fmtRWV(s,v)
     % get formated real world value
     %        
-    rwvStr = compactButAccurateDecStr(v.tfi);
-    if isPosInNegGroup(s,v)
-        rwvStr = [' ',rwvStr];
-    end
+    rwvStr = compactButAccurateDecStr(v.minBitSpanFi);
+    %if isPosInNegGroup(s,v)
+    %    rwvStr = [' ',rwvStr];
+    %end
 end
 
 
@@ -111,12 +101,11 @@ function dispScalarBinPt(s,v)
     
     [intBits,fracBits] = getIntFracBitsForDisp(s,v);
     
-    fmt = sprintf('  %%%ds.%%-%ds  =  %%s\n',...
+    fmt = sprintf('%%%ds.%%-%ds\n',...
         s.dispAttrib.binPtMaxPow2Wt+1,-s.dispAttrib.binPtMinPow2Wt);
     
-    rwvStr = fmtRWV(s,v);
-    
-    fprintf(fmt,intBits,fracBits,rwvStr);
+    printRWV(s,1,fmtRWV(s,v));
+    fprintf(fmt,intBits,fracBits);
 end
 
 
@@ -129,20 +118,22 @@ function dispScalarIntMantExp(s,v)
     n1 = s.Attrib.maxBitSpan;
     n2 = s.dispAttrib.expWidth;
 
-    fmtZ= sprintf('  %%%ds     %%-%ds  =  %%s\n',n1,n2);
-    fmt = sprintf('  %%%ds * 2^%%-%dd  =  %%s\n',n1,n2);
+    fmtZ= sprintf('%%%ds     %%-%ds\n',...
+        n1,n2);
+    fmt = sprintf('%%%ds * 2^%%-%dd\n',...
+        n1,n2);
 
-    rwvStr = fmtRWV(s,v);
+    printRWV(s,1,fmtRWV(s,v));
 
     if v.isZero
-        fprintf(fmtZ,'0','',rwvStr);
+        fprintf(fmtZ,'0','');
     else
-        sBin = v.tfi.bin;
+        sBin = v.minBitSpanFi.bin;
         fe = v.FixedExponent;
         if isPosInNegGroup(s,v)
             sBin = ['0',sBin];
         end
-        fprintf(fmt,sBin,fe,rwvStr);
+        fprintf(fmt,sBin,fe);
     end
 end
 
@@ -153,20 +144,47 @@ function dispScalarPedantic(s,v)
     assert(~s.dispAttrib.useTrueBinPtDisp);
     assert(s.dispAttrib.usePedantic);
     
+    useType = s.opt.InType;
+    extendRangeGiveSpaces = ~useType && ~s.Attrib.anyNegative; 
+    extendPrecisionGiveSpaces = ~useType;
+    
+    bits = getBitOverPow2Range(v.minBitSpanFi,...
+        s.dispAttrib.binPtMinPow2Wt,...
+        s.dispAttrib.binPtMaxPow2Wt,...
+        extendRangeGiveSpaces,extendPrecisionGiveSpaces);
 
-    uOver = fi(v.tfi,s.Attrib.overcoatType);
-    bits = uOver.bin;
+%     uOver = fi(v.minBitSpanFi,s.Attrib.typeOvercoatOfAllMinBitSpans);
+%     bits = uOver.bin;
 
+    printRWV(s,1,fmtRWV(s,v));
+    
     for i = 1:s.pedantic.nCols
         printCenter(bits(i),s.pedantic.fullColWidth);
     end
     
-    rwvStr = fmtRWV(s,v);
-    
-    fprintf('  =  %s\n',rwvStr);
-
+    fprintf('\n');
 end
 
+
+function s = dispBinHeader(s)
+    % Header for binary display
+    %    
+    assert(~s.dispAttrib.usePedantic);
+
+    bp = s.dispAttrib.useTrueBinPtDisp;
+    if bp
+        s1 = 'Binary Point';
+        s2 = '';
+    else
+        s1 = 'Integer Mantissa';
+        s2 = '    and Pow2 Exponent';
+    end    
+    
+    printRWV(s,0,'Real World');
+    fprintf('Notation: %s\n',s1)
+    printRWV(s,0,'Value');
+    fprintf('  %s\n',s2);
+end
 
 function s = dispPedanticHeader(s)
     % Pedantic binary display of scalar
@@ -202,10 +220,10 @@ function s = dispPedanticHeader(s)
     end
 
     s.pedantic.fullColWidth = maxLengthLabels + 2;
-    
-    fprintf(' ')
+
+    printRWV(s,0,'');
     totWidth = min(80,nCols * s.pedantic.fullColWidth);
-    printCenter('Bit Column Weights',totWidth);
+    printCenter('Weighted Bit Columns',totWidth);
     fprintf('\n')
     
     colFmt = sprintf(' %%%ds ',maxLengthLabels);
@@ -214,18 +232,24 @@ function s = dispPedanticHeader(s)
 %     bBefore = nNotBit - nAfter;
 %     bitFmt = sprintf('%s%%s%s',repmat(' ',1,bBefore),repmat(' ',1,nAfter));
     
+    printRWV(s,0,'');
     delx = repmat('-',1,maxLengthLabels);
     
     rowDelx(nCols,colFmt,delx);
+
+    printRWV(s,0,'Real World');
     for i = 1:nCols
         %fprintf(colFmt,colPow2Labels{i});
         printCenter(colPow2Labels{i},s.pedantic.fullColWidth);
     end
-    fprintf('    Real World Value\n')
+    fprintf('\n')
+
+    printRWV(s,0,'Value');
     for i = 1:nCols
         printCenter(colDecLabels{i},s.pedantic.fullColWidth);
     end
     fprintf('\n')
+    printRWV(s,0,'');
     rowDelx(nCols,colFmt,delx);
 
     s.pedantic.nCols = nCols;
@@ -244,9 +268,9 @@ end
 
 
 function dispScalar(s,i)
-    v = s.v(i);
+    v = s.vals(i);
     
-    if isfinite(v.tfi)        
+    if isfinite(v.minBitSpanFi)        
         if s.dispAttrib.useTrueBinPtDisp
             dispScalarBinPt(s,v);
         elseif s.dispAttrib.usePedantic
@@ -255,8 +279,24 @@ function dispScalar(s,i)
             dispScalarIntMantExp(s,v);
         end
     else
-        fprintf('  %s\n',mat2str(double(v.tfi)));
+        %fprintf('  %s\n',mat2str(double(v.minBitSpanFi)));
+        printRWV(s,0,mat2str(double(v.minBitSpanFi)));
+        fprintf('\n');
     end
 end
 
 
+function dt = getInputType(u)
+   dt = fixed.internal.type.extractNumericType(u); 
+   dt = fixed.internal.type.changeLogicalToUfix1(dt);
+end
+
+function printRWV(s,useEqual,str)
+    fprintf(' ');
+    printCenter(str,s.dispAttrib.nCharsRWV);
+    if useEqual
+        fprintf(' = ');
+    else
+        fprintf('   ');
+    end
+end

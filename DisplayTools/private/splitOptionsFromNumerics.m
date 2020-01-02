@@ -4,7 +4,7 @@ function [opts,uNumeric] = splitOptionsFromNumerics(varargin)
     % An input is treated as an option if it is a struct, or
     % a scalar char or string.
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
     
     opts = struct();
     nNumeric = countNumerics(varargin{:});

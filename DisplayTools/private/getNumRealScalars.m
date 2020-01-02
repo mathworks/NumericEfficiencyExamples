@@ -3,7 +3,7 @@ function n = getNumRealScalars(varargin)
     %
     % A complex value counts as 2 scalars, the real and imaginary parts.
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
     
     n = 0;
     for iIn = 1:nargin

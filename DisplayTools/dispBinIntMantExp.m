@@ -9,7 +9,7 @@ function dispBinIntMantExp(varargin)
     %       10 * 2^-3  =  -0.25
     %       01 * 2^2   =   4
       
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
 
     dispVarious(struct('preferFormat','IntMantExp'),varargin{:})
 end

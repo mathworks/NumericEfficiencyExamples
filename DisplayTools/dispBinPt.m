@@ -9,7 +9,7 @@ function dispBinPt(varargin)
     %       .110  =  -0.25
     %   0100.     =   4
   
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
 
     dispVarious(struct('preferFormat','BinPt'),varargin{:});
 end

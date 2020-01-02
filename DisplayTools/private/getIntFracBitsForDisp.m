@@ -2,7 +2,7 @@ function [intBits,fracBits] = getIntFracBitsForDisp(s,v)
     %getIntFracBitsForDisp get integer and fractional bits for display
     % using binary point format
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
     
     if v.isZero
         [intBits,fracBits] = binPtZero(s,v);

@@ -1,7 +1,7 @@
 function printCenter(str,lenTotal)
     %printCenter fprintf string centered
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
 
     lenStr = length(str);
    

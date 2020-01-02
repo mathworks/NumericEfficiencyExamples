@@ -15,7 +15,7 @@ function dispBinPedanticInType(varargin)
     %   0    0    0    1    1    0    0    0    =  24
     %   0    1    1    0    0    0    0    0    =  96
 
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
 
     dispVarious(struct('preferFormat','Pedantic','InType',true),varargin{:});
 end

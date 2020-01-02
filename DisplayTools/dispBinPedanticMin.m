@@ -14,7 +14,7 @@ function dispBinPedanticMin(varargin)
     %    0      1      0      1      0      0      1     =   5.125
     %    1      1      0      0      1      0      0     =  -3.5
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
 
     dispVarious(struct('preferFormat','Pedantic'),varargin{:});
 end

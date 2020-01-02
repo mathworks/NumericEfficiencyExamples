@@ -1,7 +1,7 @@
 function [s,idx] = processNumericInput(s,idx,u)
     %processNumericInput process inputs to collect info for display
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
 
     assert(isNumericOrlogical(u));
 
@@ -25,15 +25,15 @@ function [s,idx] = processFiniteScalar(s,idx,u)
     wl = ut.WordLength;
     maxPow2Wt = wl-1+fe;
         
-    s.v(idx).tfi = ut;
-    s.v(idx).bin = ut.bin;
-    s.v(idx).FixedExponent = fe;
-    s.v(idx).WordLength = wl;
-    s.v(idx).maxPow2Wt = maxPow2Wt;
-    s.v(idx).isNegative = neg;
-    s.v(idx).isZero = isZero;
+    s.vals(idx).minBitSpanFi = ut;
+    s.vals(idx).bin = ut.bin;
+    s.vals(idx).FixedExponent = fe;
+    s.vals(idx).WordLength = wl;
+    s.vals(idx).maxPow2Wt = maxPow2Wt;
+    s.vals(idx).isNegative = neg;
+    s.vals(idx).isZero = isZero;
     
-    s.Attrib = groupNumAttrib(s.Attrib,s.v(idx));
+    s.Attrib = groupNumAttrib('update',s.Attrib,s.vals(idx));
         
     idx = idx+1;
 end
@@ -43,12 +43,12 @@ function [s,idx] = processNonFiniteScalar(s,idx,u)
     
     assert(~isfinite(u));
     
-    s.v(idx).tfi = u;
-    s.v(idx).bin = '';
-    s.v(idx).FixedExponent = [];
-    s.v(idx).maxPow2Wt = [];
-    s.v(idx).isNegative = [];
-    s.v(idx).isZero = [];
+    s.vals(idx).minBitSpanFi = u;
+    s.vals(idx).bin = '';
+    s.vals(idx).FixedExponent = [];
+    s.vals(idx).maxPow2Wt = [];
+    s.vals(idx).isNegative = [];
+    s.vals(idx).isZero = [];
         
     idx = idx+1;
 end

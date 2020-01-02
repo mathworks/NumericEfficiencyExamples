@@ -2,7 +2,7 @@ function y = flattenAndInterLeave(u)
     % flattenAndInterLeave flatten numeric input and if complex interleave
     % real and imaginary parts
         
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
 
     % flatten the input
     uFlat = u(:);

@@ -3,14 +3,18 @@ function s = compactButAccurateDecStr(u)
     %with enough digits for lossless round trip eval back to 
     % double and/or to the original type.
     
-    % Copyright 2019 The MathWorks, Inc.
+    % Copyright 2019-2020 The MathWorks, Inc.
     
     assert(1==numel(u));
     
-    if isfi(u)
-        s = handleFi(u);
+    if isfinite(u)
+        if isfi(u)
+            s = handleFi(u);
+        else
+            s = fixed.internal.compactButAccurateNum2Str(double(u));
+        end
     else
-        s = fixed.internal.compactButAccurateNum2Str(double(u));
+        s = mat2str(double(u));
     end
 end
 
