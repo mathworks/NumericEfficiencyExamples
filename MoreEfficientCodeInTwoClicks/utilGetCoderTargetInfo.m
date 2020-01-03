@@ -1,4 +1,7 @@
 function [info,dispStr] = utilGetCoderTargetInfo(curSys)
+    % utilGetCoderTargetInfo get information about a models code gen target(s)
+        
+    % Copyright 2019-2020 The MathWorks, Inc.
     
     myConfigObj = getActiveConfigSet(curSys);
     h=get(myConfigObj,'Components');
@@ -19,9 +22,9 @@ function [info,dispStr] = utilGetCoderTargetInfo(curSys)
     %dispStr = sprintf('Double Click to Change\nHardware Parameters\n');
     
     if info.cgProduction
-        dispStr = sprintf('Code Gen for Production\n\n');
+        dispStr = sprintf('C Code Gen for Production\n\n');
     else
-        dispStr = sprintf('ALERT: Code Gen for\nNon Production Testing Target\n\n');
+        dispStr = sprintf('ALERT: C Code Gen for\nNon Production Testing Target\n\n');
     end
         
 %     if info.Production.have64
@@ -60,7 +63,8 @@ function info = getTargInfo(h,base)
     
     info.HWDeviceType = get(h(5),[base,'HWDeviceType']);
     
-    info.isMicro = ~strcmp(info.HWDeviceType,'ASIC/FPGA');
+    fpga = 'ASIC/FPGA';
+    info.isMicro = isempty(strfind(info.HWDeviceType,fpga));
     
     if ~info.isMicro
         return
