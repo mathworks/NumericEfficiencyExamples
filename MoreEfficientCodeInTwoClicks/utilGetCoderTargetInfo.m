@@ -2,7 +2,7 @@ function [info,dispStr] = utilGetCoderTargetInfo(curSys)
     % utilGetCoderTargetInfo get information about a models code gen target(s)
         
     % Copyright 2019-2020 The MathWorks, Inc.
-    
+
     myConfigObj = getActiveConfigSet(curSys);
     h=get(myConfigObj,'Components');
     
@@ -19,34 +19,23 @@ function [info,dispStr] = utilGetCoderTargetInfo(curSys)
         info.TestingTarget = getTargInfo(h,'Target');
     end
         
-    %dispStr = sprintf('Double Click to Change\nHardware Parameters\n');
-    
     if info.cgProduction
-        dispStr = sprintf('C Code Gen for Production\n\n');
+        dispStr = sprintf('C Code Gen for Production\n');
     else
-        dispStr = sprintf('ALERT: C Code Gen for\nNon Production Testing Target\n\n');
+        dispStr = sprintf('ALERT: C Code Gen for\nNon Production Testing Target\n');
     end
         
-%     if info.Production.have64
-%         have64Str = 'Native 64 bits available';
-%         patchColor = [0 1 0]; % green
-%     else
-%         have64Str = 'WARNING: 64 bits NOT available';
-%         patchColor = [1 0 0]; % red
-%     end
-
-    dispStr = sprintf('%sProduction Target:\n %s\n',dispStr,info.Production.HWDeviceType);
-    dispStr = appendTargInfo(dispStr,info.Production);    
-    %dispStr = sprintf('%sUse Division %s\n',dispStr,info.UseDivisionForNetSlopeComputation);
-    
+    dispStr = appendTargInfo(dispStr,info.Production,'Production');        
     if ~info.cgProduction
-        dispStr = sprintf('%Testing Target: %s\n',dispStr,info.TestingTarget.HWDeviceType);
-        dispStr = appendTargInfo(dispStr,info.TestingTarget);
+        dispStr = appendTargInfo(dispStr,info.TestingTarget,'Testing');
     end    
 end
 
 
-function dispStr = appendTargInfo(dispStr,targInfo)
+function dispStr = appendTargInfo(dispStr,targInfo,targetCatStr)
+    
+    dispStr = sprintf('%s\n%s Target:\n %s\n',dispStr,...
+        targetCatStr,targInfo.HWDeviceType);
     
     if targInfo.isMicro
         dispStr = sprintf('%sChar: %d  ',dispStr,targInfo.BitPerChar);
