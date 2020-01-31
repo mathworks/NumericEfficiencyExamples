@@ -122,8 +122,8 @@ function fullPlotHalf(doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, Overflo
     sOutDt = sprintf('Output %s',dataTypeOut.tostring);
     
     if doUpper
-        leg = plotLeg(leg,'Ideal Output',z.u,z.u,'k:');
-        leg = plotLeg(leg,'Quantized Output',z.u,z.y,'k-',1);
+        leg = plotLeg(leg,'Ideal Output',z.u,z.u,'k:',1.25);
+        leg = plotLeg(leg,'Quantized Output',z.u,z.y,'k-',1.25);
         xlabel('Input')
         ylabel('Output')
         st = sprintf('Input %sQuantized to %s\n%s',...
@@ -133,7 +133,7 @@ function fullPlotHalf(doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, Overflo
         xBar = xyOrig(1:2);
         yBar = slope*[1 1];
         
-        leg = plotLeg(leg,'Error',z.u,z.err,'k-',1);
+        leg = plotLeg(leg,'Error',z.u,z.err,'k-',1.25);
         leg = plotLeg(leg,'1 Bit Threshold',xBar,yBar,'k--');
         %        if nSlopes < 7
         %            leg = plotLeg(leg,'1/2 Bit Threshold',xBar,0.5*yBar,'k-.');
@@ -183,13 +183,15 @@ function fullPlotHalf(doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, Overflo
 end
 
 
-function leg = plotLeg(leg,str,x,y,marker,doThick)
+function leg = plotLeg(leg,str,x,y,marker,thicknessFactor)
     if ~isempty(x)
-        doThick = exist('doThick','var') && doThick;
+        if ~exist('doThick','var')
+            thicknessFactor = 1;
+        end
         leg{end+1} = str;
-        if doThick
+        if 1 ~= thicknessFactor
             %plot(x,y,marker,'MarkerSize',300);
-            plot(x,y,marker,'LineWidth',1.5);
+            plot(x,y,marker,'LineWidth',thicknessFactor);
         else
             plot(x,y,marker);
         end
