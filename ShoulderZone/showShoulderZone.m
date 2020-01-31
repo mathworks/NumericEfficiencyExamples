@@ -45,7 +45,7 @@ function showShoulderZone(dataTypeOut,dataTypeIn,opts)
         'Floor'
         };
     
-    iFigure = 1;
+    iFigure = getOpt(opts,'iFigure',1);
     for ioa = 1:numel(OverflowAction)
         for irm = 1:numel(RoundingMethod)
             iFigure = doPlot(iFigure,dataTypeOut,dataTypeIn,r,...
@@ -54,41 +54,88 @@ function showShoulderZone(dataTypeOut,dataTypeIn,opts)
     end
 end
 
+function v = getOpt(opts,fieldName,defaultValue)
+    if isempty(opts) || ~isfield(opts,fieldName)
+        v = defaultValue;
+    else
+        v = opts.(fieldName);
+    end
+end
+
+
 function iFigure = doPlot(iFigure,dataTypeOut,dataTypeIn,r,RoundingMethod, OverflowAction,opts)
     
-    figure(iFigure)
-    subplot(1,1,1)
-    fullPlot(r,dataTypeOut,dataTypeIn,RoundingMethod, OverflowAction);
-    shg
-    if isfield(opts,'rootFigName')
-        sss = sprintf('%s_%s%s%s',...
-            opts.rootFigName,...
-            dataTypeOut.tostringInternalSlName,...
-            RoundingMethod, OverflowAction);
-        acbSaveFig(iFigure,sss)
+    doBoth = getOpt(opts,'doBoth',true);
+    
+    if doBoth
+        vSelect = 3;
+    else
+        vSelect = [1 2];
     end
     
-    iFigure = iFigure + 1;
+    for curSelect = vSelect
+    
+        figureHandle = figure(iFigure);
+        set(figureHandle, 'Color', 'white'); % white bckgr
+        set(figureHandle, 'Unit','pixels');
+        x = 1000;
+        y = round(1.25*x);
+        pos = [-x 0 x y];
+        set(figureHandle,'position',pos);     % set size
+        figureHandle.WindowState = 'maximized';
+        subplot(1,1,1)
+        fullPlot(r,dataTypeOut,dataTypeIn,RoundingMethod, OverflowAction,curSelect,opts);
+        shg
+        if isfield(opts,'rootFigName')
+            sss = sprintf('%s_%s%s%s',...
+                opts.rootFigName,...
+                dataTypeOut.tostringInternalSlName,...
+                RoundingMethod, OverflowAction);
+            acbSaveFig(iFigure,sss)
+        end
+    
+        iFigure = iFigure + 1;
+    end
 end
 
 
-function fullPlot(r,dataTypeOut,dataTypeIn,RoundingMethod, OverflowAction)
+function fullPlot(r,dataTypeOut,dataTypeIn,RoundingMethod, OverflowAction,selection,opts)
     
     z = miniCalc(r.full,dataTypeOut,RoundingMethod, OverflowAction, 2^17+1,false);
+
+    doFirst = true;
+    doSecond = true;
+
+    switch selection
+        case 1
+            doSecond = false;
+        case 2
+            doFirst = false;
+    end
+    doBoth = doFirst && doSecond;
     
-    fullPlotHalf(true,r,dataTypeOut,dataTypeIn,z,RoundingMethod, OverflowAction);
-    fullPlotHalf(false,r,dataTypeOut,dataTypeIn,z,RoundingMethod, OverflowAction);
+    if doFirst
+        fullPlotHalf(doBoth,true,r,dataTypeOut,dataTypeIn,z,RoundingMethod, OverflowAction,opts);
+    end
+    if doSecond
+        fullPlotHalf(doBoth,false,r,dataTypeOut,dataTypeIn,z,RoundingMethod, OverflowAction,opts);
+    end
 end
 
-function fullPlotHalf(doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, OverflowAction)
-    
-    if doUpper
+function fullPlotHalf(doBoth,doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, OverflowAction,opts)
+
+    if ~doBoth
+        subplot(1,1,1)
+    elseif doUpper
         subplot(2,1,1)
-        hold off
-        plot(z.u,z.u,z.u,z.y);
     else
         subplot(2,1,2)
-        hold off
+    end
+    hold off
+
+    if doUpper
+        plot(z.u,z.u,z.u,z.y);
+    else
         plot(z.u,z.err);
     end
     axis tight
@@ -148,10 +195,6 @@ function fullPlotHalf(doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, Overflo
         ylabel('Error = Output - Input')
         title(sprintf('Quantization Error  %s\n%s',sOutDt,sModes));
     end
-    %legend(leg,'Location','BestOutside')
-    %legend(leg,'Location','Best')
-    legend(leg,'Location','South')
-    %grid on
     axis(xyOrig);
     hold off
     if doUpper
@@ -160,10 +203,12 @@ function fullPlotHalf(doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, Overflo
         appendRightBitsAxis(r.leftDelta);
     end
     
-    if 1
-        ax = gca;
+    ax = gca;
+    if 0
         if 1
-            if doUpper
+            if ~doBoth
+                pos = [0 0 1 1];
+            elseif doUpper
                 pos = [0 0.51 1 0.49];
             else
                 pos = [0 0 1 0.49];
@@ -171,16 +216,25 @@ function fullPlotHalf(doUpper,r,dataTypeOut,dataTypeIn,z,RoundingMethod, Overflo
             ax.OuterPosition = pos;
             %ax.TightInset = pos;
         end
-        outerpos = ax.OuterPosition;
-        
-        ti = ax.TightInset;
-        left = outerpos(1) + ti(1);
-        bottom = outerpos(2) + ti(2);
-        ax_width = outerpos(3) - ti(1) - ti(3);
-        ax_height = outerpos(4) - ti(2) - ti(4);
-        ax.Position = [left bottom ax_width ax_height];
+        drawnow
     end
+    removePlotWhitespace(ax);
+    drawnow
+    legendLoc = getOpt(opts,'legendLoc','South');    
+    legend(leg,'Location',legendLoc)
+    drawnow
 end
+
+function removePlotWhitespace(ax)
+    outerpos = ax.OuterPosition;
+    ti = ax.TightInset;
+    left = outerpos(1) + ti(1);
+    bottom = outerpos(2) + ti(2);
+    ax_width = outerpos(3) - ti(1) - ti(3);
+    ax_height = outerpos(4) - ti(2) - ti(4);
+    ax.Position = [left bottom ax_width ax_height];
+end
+
 
 
 function leg = plotLeg(leg,str,x,y,marker,thicknessFactor)
