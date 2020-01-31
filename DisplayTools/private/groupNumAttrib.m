@@ -69,8 +69,8 @@ function s = groupNumAttrib(action,s,input2,input3,input4)
                     % that was in the original types
                     % and as close as possible to column 2^0
                     %
-                    fe = s.Attrib.typeOvercoatOrigTypes.FixedExponent;
-                    wl = s.Attrib.typeOvercoatOrigTypes.WordLength;
+                    fe = s.typeOvercoatOrigTypes.FixedExponent;
+                    wl = s.typeOvercoatOrigTypes.WordLength;
                     minPow2Wt = fe;
                     maxPow2Wt = wl - 1 + fe;
                     pow2Exp = max(min(0,maxPow2Wt),minPow2Wt);
@@ -99,7 +99,9 @@ function s = groupNumAttrib(action,s,input2,input3,input4)
             % -2^1 and -2^0.  Then there would be a needless 2^-1 bit column so
             % far. This code will trim off that needless column.
             %
-            s.valsInOvercoatType = fixed.internal.type.tightFi(s.valsInOvercoatType);
+            if ~allValuesZero
+                s.valsInOvercoatType = fixed.internal.type.tightFi(s.valsInOvercoatType);
+            end
             s.typeOvercoatOfAllMinBitSpans = numerictype(s.valsInOvercoatType);
             s.minPow2Wt = s.typeOvercoatOfAllMinBitSpans.FixedExponent;
             
