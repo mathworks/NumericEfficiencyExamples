@@ -5,9 +5,12 @@ function s = compactButAccurateDecStr(u)
     
     % Copyright 2019-2020 The MathWorks, Inc.
     
-    assert(1==numel(u));
+    validateattributes(u, {'numeric','embedded.fi','logical'},...
+        {'real','scalar'});
     
     if isfinite(u)
+        u = fixed.internal.math.castFiToMATLAB(u);
+        u = fixed.internal.math.castIntToFi(u);
         if isfi(u)
             s = handleFi(u);
         else

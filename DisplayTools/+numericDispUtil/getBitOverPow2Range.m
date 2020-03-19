@@ -90,7 +90,7 @@ function u = makeFixpt(u)
     elseif isinteger(u)
         u = fi(u);
     elseif isfloat(u) || (isfi(u) && ~isfixed(u))
-        u = fixed.internal.type.tightFi(u);
+        u = tightFiScalarCached(u);
     end
 end
     

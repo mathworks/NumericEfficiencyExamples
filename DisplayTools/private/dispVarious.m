@@ -1,92 +1,63 @@
 function dispVarious(varargin)
-    %dispBinPt binary point display of input values
+    %dispVarious display input values in various formats
     
     % Copyright 2019-2020 The MathWorks, Inc.
-    
-    [opt,uNumeric] = splitOptionsFromNumerics(varargin{:});
-    
-    nNumeric = numel(uNumeric);
-    
-    nTot = getNumRealScalars(uNumeric{:});
-    
-    s.Attrib = groupNumAttrib('init');
-    
-    s.opt = setDefaultOptions(opt);
-    
-    s.vals = repmat(struct(),nTot,1);
-    s.Attrib.origTypes = cell(1,nNumeric);
-    
-    idxScalar = 1;
-    for iIn = 1:nNumeric
-        u = uNumeric{iIn};
-        s.Attrib.origTypes{iIn} = getInputType(u);
-        [s,idxScalar] = processNumericInput(s,idxScalar,u);
-    end
-    s.Attrib = groupNumAttrib('finalize',s.Attrib,s.Attrib.origTypes,uNumeric,nTot); % finalize
-    
 
-    if s.opt.InType
-        % Use combined overcoat type for display
-        %
-        fe = s.Attrib.typeOvercoatCombined.FixedExponent;
-        wl = s.Attrib.typeOvercoatCombined.WordLength;
-        s.Attrib.minPow2Wt = fe;
-        s.Attrib.maxPow2Wt = wl - 1 + fe;
-        s.Attrib.valsInOvercoatType = castAllToType(s.Attrib.typeOvercoatCombined,uNumeric,nTot);
-    end        
-     
+    objX = numericDispUtil.groupNumericAttrib2(varargin{:});
+    s.Attrib = objX;
+    s.opt = objX.opt;
+    s.vals = objX.vals;    
     s = getDispAttrib(s);
     
     % Get maximum chars for real world value
     %
-    ncRWV = 10;
-    for i = 1:numel(s.vals)
-        rwvStr = fmtRWV(s,s.vals(i));
-        ncRWV = max(ncRWV,length(rwvStr));
+    s = determineNumCharsForRWV(s);
+    
+    if s.Attrib.anyNonFinite
+        sFin = ' finite';
+    else
+        sFin = '';
     end
-    s.dispAttrib.nCharsRWV = ncRWV;
     
     if s.Attrib.anyNegative
-        fprintf('\nNegative values present: Two''s Complement Encoding shown\n\n');
+        fprintf('\nNegative%s values present: Two''s Complement Encoding shown\n\n',sFin);
     else
-        fprintf('\nAll values non-negative: Unsigned Encoding shown\n\n');
+        fprintf('\nAll%s values non-negative: Unsigned Encoding shown\n\n',sFin);
     end
 
     if s.dispAttrib.usePedantic
         s = dispPedanticHeader(s);
     else
+        % ToDo fix bug here not always binary point display
+        %
         s = dispBinHeader(s);
     end
         
-    for i=1:nTot
+    for i=1:s.Attrib.nTot
         dispScalar(s,i);
     end
 end
 
 
-function opt = setDefaultOptions(opt)
-
-    defOpt.maxDispWidthBits = 80;
-    defOpt.preferFormat = '';
-    defOpt.InType = false;
-    
-    if isempty(opt)
-        opt = defOpt;
-    else
-        fns = fieldnames(defOpt);
-        for i=1:numel(fns)
-            fn = fns{i};
-            if ~isfield(opt,fn)
-                opt.(fn) = defOpt.(fn);
-            end
-        end        
+function s = determineNumCharsForRWV(s)
+    ncRWV = 10;
+    for i = 1:numel(s.vals)
+        rwvStr = fmtRWV(s.vals(i));
+        ncRWV = max(ncRWV,length(rwvStr));
     end
+    s.dispAttrib.nCharsRWV = ncRWV;
 end
 
-function rwvStr = fmtRWV(s,v)
+
+function rwvStr = fmtRWV(v)
     % get formated real world value
     %        
-    rwvStr = compactButAccurateDecStr(v.minBitSpanFi);
+    if isempty(v.minBitSpanBinPt)
+        x = v.origValue;
+    else
+        x = v.minBitSpanBinPt;
+    end
+    rwvStr = compactButAccurateDecStr(x);
     %if isPosInNegGroup(s,v)
     %    rwvStr = [' ',rwvStr];
     %end
@@ -104,18 +75,24 @@ function dispScalarBinPt(s,v)
     fmt = sprintf('%%%ds.%%-%ds\n',...
         s.dispAttrib.binPtMaxPow2Wt+1,-s.dispAttrib.binPtMinPow2Wt);
     
-    printRWV(s,1,fmtRWV(s,v));
+    printRWV(s,1,fmtRWV(v));
     fprintf(fmt,intBits,fracBits);
 end
 
 
-function dispScalarIntMantExp(s,v)
+function dispScalarIntMantExp(s,v,align)
     % binary point diplay of scalar
     %    get integer and fraction bits
     %    
     assert(~s.dispAttrib.useTrueBinPtDisp);
 
-    n1 = s.Attrib.maxBitSpan;
+    if align
+        maxFe = s.Attrib.maxPow2Wt;
+        minFe = s.Attrib.minPow2Wt;
+        n1 = maxFe - minFe + 1;
+    else
+        n1 = s.Attrib.maxBitSpan;
+    end
     n2 = s.dispAttrib.expWidth;
 
     fmtZ= sprintf('%%%ds     %%-%ds\n',...
@@ -123,15 +100,29 @@ function dispScalarIntMantExp(s,v)
     fmt = sprintf('%%%ds * 2^%%-%dd\n',...
         n1,n2);
 
-    printRWV(s,1,fmtRWV(s,v));
+    printRWV(s,1,fmtRWV(v));
 
-    if v.isZero
-        fprintf(fmtZ,'0','');
+    useType = s.opt.InType;    
+    if useType
+        curVal = v.valBinPtTypeBasedOnOrigType;
     else
-        sBin = v.minBitSpanFi.bin;
-        fe = v.FixedExponent;
-        if isPosInNegGroup(s,v)
-            sBin = ['0',sBin];
+        curVal = v.minBitSpanBinPt;
+    end
+    if s.Attrib.anyNegative && ('1' == curVal.bin(1))
+        curVal = fi(curVal,fixed.internal.type.sproutSignBit(curVal));
+    end
+        
+    
+    
+    if ~useType && v.isZero
+        fprintf(fmtZ,'0',''); %#ok<CTPCT>
+    else
+        sBin = curVal.bin;
+        fe = curVal.FixedExponent;
+        if align
+            minFe = s.Attrib.minPow2Wt;
+            nRightPad = fe - minFe;
+            sBin = [sBin,repmat(' ',1,nRightPad)];
         end
         fprintf(fmt,sBin,fe);
     end
@@ -145,21 +136,30 @@ function dispScalarPedantic(s,v)
     assert(s.dispAttrib.usePedantic);
     
     useType = s.opt.InType;
-    extendRangeGiveSpaces = ~useType && ~s.Attrib.anyNegative; 
-    extendPrecisionGiveSpaces = ~useType;
+    extendRangeGiveSpaces = ~s.opt.extendRange;
+    extendPrecisionGiveSpaces = ~s.opt.extendPrecision;
     
-    bits = getBitOverPow2Range(v.minBitSpanFi,...
-        s.dispAttrib.binPtMinPow2Wt,...
-        s.dispAttrib.binPtMaxPow2Wt,...
+    if useType
+        curVal = v.valBinPtTypeBasedOnOrigType;
+    else
+        curVal = v.minBitSpanBinPt;
+    end
+    if s.Attrib.anyNegative && ('1' == curVal.bin(1))
+        curVal = fi(curVal,fixed.internal.type.sproutSignBit(curVal));
+    end
+    
+    bits = numericDispUtil.getBitOverPow2Range(curVal,...
+        s.Attrib.minPow2Wt,...
+        s.Attrib.maxPow2Wt,...
         extendRangeGiveSpaces,extendPrecisionGiveSpaces);
 
-%     uOver = fi(v.minBitSpanFi,s.Attrib.typeOvercoatOfAllMinBitSpans);
+%     uOver = fi(v.minBitSpanBinPt,s.Attrib.typeOvercoatOfAllMinBitSpans);
 %     bits = uOver.bin;
 
-    printRWV(s,1,fmtRWV(s,v));
+    printRWV(s,1,fmtRWV(v));
     
     for i = 1:s.pedantic.nCols
-        printCenter(bits(i),s.pedantic.fullColWidth);
+        numericDispUtil.printCenter(bits(i),s.pedantic.fullColWidth);
     end
     
     fprintf('\n');
@@ -200,17 +200,26 @@ function s = dispPedanticHeader(s)
     colPow2Labels = cell(1,nCols);
     colDecLabels = cell(1,nCols);
     p2Vec = p2Hi:-1:p2Lo;
+    nMaxRow2 = getMaxCharsFor2ndRowValue(p2Hi,p2Lo);
+    
     for i=1:nCols
         p2 = p2Vec(i);
         curLabel = sprintf('2^%d',p2);
-        curLabel2 = mat2str(2^p2,19);
-        if p2 == p2Hi && s.Attrib.anyNegative
-            curLabel = ['-',curLabel];
-            curLabel2 = ['-',curLabel2];
+        vRow2 = 2^p2;
+        if isfinite(vRow2) && vRow2 ~= 0
+            curLabel2 = mat2str(2^p2,19);
+        else
+            curLabel2 = '';
         end
+        curLabel2 = removeLeadZero(curLabel2);
+        
+        %         if p2 == p2Hi && s.Attrib.anyNegative
+        %             curLabel = ['-',curLabel]; %#ok<AGROW>
+        %             curLabel2 = ['-',curLabel2]; %#ok<AGROW>
+        %         end
         curLen = length(curLabel);
         curLen2 = length(curLabel2);
-        if curLen2 > 7
+        if curLen2 > nMaxRow2
             curLabel2 = '';
             curLen2 = 0;
         end
@@ -223,14 +232,10 @@ function s = dispPedanticHeader(s)
 
     printRWV(s,0,'');
     totWidth = min(80,nCols * s.pedantic.fullColWidth);
-    printCenter('Weighted Bit Columns',totWidth);
+    numericDispUtil.printCenter('Weighted Bit Columns',totWidth);
     fprintf('\n')
     
     colFmt = sprintf(' %%%ds ',maxLengthLabels);
-%     nNotBit = maxLengthLabels + 2 - 1;
-%     nAfter = ceil(nNotBit/2);
-%     bBefore = nNotBit - nAfter;
-%     bitFmt = sprintf('%s%%s%s',repmat(' ',1,bBefore),repmat(' ',1,nAfter));
     
     printRWV(s,0,'');
     delx = repmat('-',1,maxLengthLabels);
@@ -239,14 +244,13 @@ function s = dispPedanticHeader(s)
 
     printRWV(s,0,'Real World');
     for i = 1:nCols
-        %fprintf(colFmt,colPow2Labels{i});
-        printCenter(colPow2Labels{i},s.pedantic.fullColWidth);
+        numericDispUtil.printCenter(colPow2Labels{i},s.pedantic.fullColWidth);
     end
     fprintf('\n')
 
     printRWV(s,0,'Value');
     for i = 1:nCols
-        printCenter(colDecLabels{i},s.pedantic.fullColWidth);
+        numericDispUtil.printCenter(colDecLabels{i},s.pedantic.fullColWidth);
     end
     fprintf('\n')
     printRWV(s,0,'');
@@ -258,6 +262,16 @@ function s = dispPedanticHeader(s)
     s.pedantic.p2Vec = p2Vec;
 end
 
+function n = getMaxCharsFor2ndRowValue(p2Hi,p2Lo)
+
+    n = 4;
+    curLabel = sprintf('2^%d',p2Hi);
+    n = max(n,length(curLabel));
+    curLabel = sprintf('2^%d',p2Lo);
+    n = max(n,length(curLabel));
+end
+
+
 function rowDelx(nCols,colFmt,delx)
     for i = 1:nCols
         fprintf(colFmt,delx);       
@@ -265,35 +279,33 @@ function rowDelx(nCols,colFmt,delx)
     fprintf('\n');
 end
 
-
+function str = removeLeadZero(str)
+    if length(str) >= 3 && str(1) == '0' && str(2) == '.'
+        str(1) = [];
+    end
+end
 
 function dispScalar(s,i)
     v = s.vals(i);
     
-    if isfinite(v.minBitSpanFi)        
+    if isfinite(v.minBitSpanBinPt)        
         if s.dispAttrib.useTrueBinPtDisp
             dispScalarBinPt(s,v);
         elseif s.dispAttrib.usePedantic
             dispScalarPedantic(s,v);
-        else
-            dispScalarIntMantExp(s,v);
+        else            
+            dispScalarIntMantExp(s,v, s.dispAttrib.doAlign);
         end
     else
-        %fprintf('  %s\n',mat2str(double(v.minBitSpanFi)));
-        printRWV(s,0,mat2str(double(v.minBitSpanFi)));
+        %fprintf('  %s\n',mat2str(double(v.minBitSpanBinPt)));
+        printRWV(s,0,mat2str(double(v.origValue)));
         fprintf('\n');
     end
 end
 
-
-function dt = getInputType(u)
-   dt = fixed.internal.type.extractNumericType(u); 
-   dt = fixed.internal.type.changeLogicalToUfix1(dt);
-end
-
 function printRWV(s,useEqual,str)
     fprintf(' ');
-    printCenter(str,s.dispAttrib.nCharsRWV);
+    numericDispUtil.printCenter(str,s.dispAttrib.nCharsRWV);
     if useEqual
         fprintf(' = ');
     else

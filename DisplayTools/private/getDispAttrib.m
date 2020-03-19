@@ -32,6 +32,8 @@ function s = getDispAttrib(s)
             end
         case 'IntMantExp'
             s.dispAttrib.dispFormat = 'IntMantExp';
+        case 'IntMantExpAlign'
+            s.dispAttrib.dispFormat = 'IntMantExpAlign';
         case 'Pedantic'
             s.dispAttrib.dispFormat = 'Pedantic';
         otherwise
@@ -39,4 +41,5 @@ function s = getDispAttrib(s)
     end
      s.dispAttrib.useTrueBinPtDisp = strcmp(s.dispAttrib.dispFormat,'BinPt');
      s.dispAttrib.usePedantic = strcmp(s.dispAttrib.dispFormat,'Pedantic');
+     s.dispAttrib.doAlign = strcmp(s.dispAttrib.dispFormat,'IntMantExpAlign');     
 end

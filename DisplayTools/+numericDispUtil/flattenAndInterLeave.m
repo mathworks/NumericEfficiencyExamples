@@ -5,7 +5,11 @@ function y = flattenAndInterLeave(u)
     % Copyright 2019-2020 The MathWorks, Inc.
 
     % flatten the input
-    uFlat = u(:);
+    if isempty(u)
+        uFlat = real(u);
+    else
+        uFlat = u(:);
+    end
     
     if isreal(uFlat)
         y = uFlat;

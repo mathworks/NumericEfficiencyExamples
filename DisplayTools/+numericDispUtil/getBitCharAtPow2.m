@@ -30,7 +30,8 @@ function c = getBitCharAtPow2(u,p2Exp,extendRangeGiveSpaces,extendPrecisionGiveS
     
     % Copyright 2019-2020 The MathWorks, Inc.
     
-    c = getBitOverPow2Range(u,p2Exp,p2Exp,extendRangeGiveSpaces,extendPrecisionGiveSpaces);
+    c = numericDispUtil.getBitOverPow2Range(u,p2Exp,p2Exp,...
+        extendRangeGiveSpaces,extendPrecisionGiveSpaces);
 end
     
     
