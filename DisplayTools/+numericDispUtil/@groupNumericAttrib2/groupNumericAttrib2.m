@@ -42,7 +42,7 @@ classdef groupNumericAttrib2
             obj.nTot = numericDispUtil.getNumRealScalars(obj.uNumeric{:});
             obj = setOrigInputTypes(obj);            
             
-            initVal = numericDispUtil.scalarNumericAttrib(inf);
+            initVal = numericDispUtil.scalarNumericAttrib(inf,obj.opt);
             obj.vals = repmat(initVal,obj.nTot,1);
             obj = setValScalars(obj);
             
@@ -84,7 +84,7 @@ function obj = setValScalars(obj)
         u = obj.uNumeric{iIn};
         n = numel(u);
         for j=1:n
-            obj.vals(idxScalar) = numericDispUtil.scalarNumericAttrib(u(j));
+            obj.vals(idxScalar) = numericDispUtil.scalarNumericAttrib(u(j),obj.opt);
             idxScalar = idxScalar + 1;
         end
     end

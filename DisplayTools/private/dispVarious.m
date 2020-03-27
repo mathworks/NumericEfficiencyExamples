@@ -102,18 +102,9 @@ function dispScalarIntMantExp(s,v,align)
 
     printRWV(s,1,fmtRWV(v));
 
-    useType = s.opt.InType;    
-    if useType
-        curVal = v.valBinPtTypeBasedOnOrigType;
-    else
-        curVal = v.minBitSpanBinPt;
-    end
-    if s.Attrib.anyNegative && ('1' == curVal.bin(1))
-        curVal = fi(curVal,fixed.internal.type.sproutSignBit(curVal));
-    end
-        
+    curVal = getValBasedOnOption(s,v);    
     
-    
+    useType = s.opt.InType;        
     if ~useType && v.isZero
         fprintf(fmtZ,'0',''); %#ok<CTPCT>
     else
@@ -135,18 +126,10 @@ function dispScalarPedantic(s,v)
     assert(~s.dispAttrib.useTrueBinPtDisp);
     assert(s.dispAttrib.usePedantic);
     
-    useType = s.opt.InType;
     extendRangeGiveSpaces = ~s.opt.extendRange;
     extendPrecisionGiveSpaces = ~s.opt.extendPrecision;
     
-    if useType
-        curVal = v.valBinPtTypeBasedOnOrigType;
-    else
-        curVal = v.minBitSpanBinPt;
-    end
-    if s.Attrib.anyNegative && ('1' == curVal.bin(1))
-        curVal = fi(curVal,fixed.internal.type.sproutSignBit(curVal));
-    end
+    curVal = getValBasedOnOption(s,v);
     
     bits = numericDispUtil.getBitOverPow2Range(curVal,...
         s.Attrib.minPow2Wt,...

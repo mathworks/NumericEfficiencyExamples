@@ -19,17 +19,17 @@ classdef scalarNumericAttrib
     end
     
     methods
-        function obj = scalarNumericAttrib(u)
+        function obj = scalarNumericAttrib(u,opt)
             %scalarNumericAttrib Construct an instance of this class
             %
             assert(numericDispUtil.isNumericOrlogical(u));
 
-            obj = processScalar(obj,u);
+            obj = processScalar(obj,u,opt);
         end
     end
 end
 
-function obj = processFiniteScalar(obj,u)
+function obj = processFiniteScalar(obj,u,opt)
     
     assert(isfinite(u));
     obj.valIsFinite = true;
@@ -38,6 +38,11 @@ function obj = processFiniteScalar(obj,u)
     uNoSlopeBias = fixed.internal.math.fullSlopeBiasToBinPt(u);
     ut = tightFiScalarCached(uNoSlopeBias);
 
+    if ( 2 == ut.WordLength && ut.SignednessBool && ...
+         (-1 > ut.FixedExponent) && strcmp(ut.bin,'10') && ...
+         strcmp(opt.preferFormat,'BinPt') )
+       ut = fi(ut,1,2,-(ut.FixedExponent+1));
+    end   
     
     obj.minBitSpanBinPt = ut;
     obj.bin = ut.bin;
@@ -54,13 +59,13 @@ function obj = processFiniteScalar(obj,u)
     obj.isZero = 0 == ut;
 end
 
-function obj = processScalar(obj,u)
+function obj = processScalar(obj,u,opt)
     
     obj.origValue = u;
     obj.origType = getInputType(u);
     
     if isfinite(u)
-        obj = processFiniteScalar(obj,u);
+        obj = processFiniteScalar(obj,u,opt);
     end
 end
 

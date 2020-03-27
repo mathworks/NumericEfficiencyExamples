@@ -11,6 +11,6 @@ function y = innerTightFi(u)
     %
     validateattributes(u, {'numeric','embedded.fi','logical'},...
         {'real','finite','scalar'});
-
+    u = fixed.internal.math.castLogicalToUfix1(u);
     y = fixed.internal.type.tightFi(u);    
 end
