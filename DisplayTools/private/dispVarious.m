@@ -20,9 +20,9 @@ function dispVarious(varargin)
     end
     
     if s.Attrib.anyNegative
-        fprintf('\nNegative%s values present: Two''s Complement Encoding shown\n\n',sFin);
+        fprintf('\nBinary two''s complement encoding shown (some%s values are negative.)\n\n',sFin);
     else
-        fprintf('\nAll%s values non-negative: Unsigned Encoding shown\n\n',sFin);
+        fprintf('\nBinary unsigned encoding shown (all%s values are non-negative.)\n\n',sFin);
     end
 
     if s.dispAttrib.usePedantic
