@@ -7,10 +7,20 @@ build_mex_sfun_user_hybrid_add
 mdl = 'model_exercise_wrapper_strict_typed';
 open_system(mdl)
 
-% sim it
+% sim it normal mode
+%    no code gen used
+set_param(mdl,'SimulationMode','normal')
 sim(mdl)
 
-% generate C code from model
+% sim it accelerator mode
+%    uses code gen to accelerate, but Coder licenses not used
+%
+set_param(mdl,'SimulationMode','accelerator')
+sim(mdl)
+
+% generate stand-alone C code from model
+%     for Generic Real-Time
+%       requires MATLAB Coder and Simulink Coder
 rtwbuild(mdl)
 
 % Execute the model at the command line
