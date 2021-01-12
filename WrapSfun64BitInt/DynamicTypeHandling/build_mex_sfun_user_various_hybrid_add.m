@@ -1,0 +1,1 @@
+mex -lfixedpoint sfun_user_various_hybrid_add.c example_func_core_dynamic_typed.c 

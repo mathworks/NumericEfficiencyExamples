@@ -1,0 +1,113 @@
+%% Copyright 2020 The MathWorks, Inc.
+%%
+%% Abstract:
+%%      User S-function example
+%%      Using on strictly type core algorithm shared
+%%      by simulation and by C code generation.
+%% 
+%%      This example implements a simple hybrid add of two inputs 
+%%      The core algorithm is in a C file
+%%      that will be shared for both simulation and code generation.
+%%     
+%%      This s-function handles the registration and so forth 
+%%      and calls the core algorithm from the C file.
+%% 
+%%      For code generation, a corresponding TLC file will 
+%%      handle the interfacing aspects, then call the 
+%%      core algorithm from the same C file as used for simulation.
+
+
+%implements sfun_user_various_hybrid_add "C"
+
+%include "fix_published.tlc"
+
+%function BlockInstanceSetup(block, system) void
+  %%
+%endfunction 
+
+
+%function BlockTypeSetup(block, system) void
+  %%
+  %<LibAddToCommonIncludes("example_func_core_dynamic_typed.h")>
+  %<LibAddToModelSources(  "example_func_core_dynamic_typed")>
+%endfunction
+
+
+%function loc_getSignedness( block, dataTypeId )
+  %%
+  %if FixPt_DataTypeIsFloatingPoint( block, dataTypeId )
+     %return 1
+  %else
+     %return FixPt_DataTypeFxpIsSigned( block, dataTypeId )
+  %endif
+  %%
+%endfunction
+
+%function loc_getWordLength( block, dataTypeId )
+  %%
+  %if FixPt_DataTypeIsFloatingPoint( block, dataTypeId )
+     %if dataTypeId == tSS_DOUBLE 
+        %return 64
+     %else 
+        %%dataTypeId == tSS_SINGLE
+        %return 32
+     %endif
+  %else
+     %return FixPt_DataTypeFxpWordLength( block, dataTypeId )
+  %endif
+  %%
+%endfunction
+
+
+
+%function Outputs(block, system) Output
+  %%
+  %assign dataTypeIdU0 = LibBlockInputSignalDataTypeId(0)
+  %assign dataTypeIdU1 = LibBlockInputSignalDataTypeId(1)
+  %assign dataTypeIdY0 = LibBlockOutputSignalDataTypeId(0)
+  %%
+  %assign labelForU0Addr = LibBlockInputSignalAddr( 0,  "", "", 0 )
+  %assign labelForU1Addr = LibBlockInputSignalAddr( 1,  "", "", 0 )
+  %assign labelForY0Addr = LibBlockOutputSignalAddr( 0,  "", "", 0 )
+  %%
+  %%
+  %%  Put comment into the generated C code
+  %%
+  /* User Sfunction sfun_user_various_hybrid_add 
+   */
+  %% Open local scope 
+  %%   so attributes structures don't variable redefinition
+  %%   with other instances of this S-Function
+  {
+  %%
+  %% Gather attributes of the ports
+  %%
+  %% Per instance, when inlined or in generated code
+  %% these attributes are static.
+  %%
+  numTypeAttrib ntAttribU0;
+  numTypeAttrib ntAttribU1;
+  numTypeAttrib ntAttribY0;
+  %%
+  ntAttribU0.isFloat = %<FixPt_DataTypeIsFloatingPoint( block, dataTypeIdU0 )>;
+  ntAttribU0.isSigned = %<loc_getSignedness( block, dataTypeIdU0 )>;
+  ntAttribU0.wordLength = %<loc_getWordLength( block, dataTypeIdU0 )>;
+  %%
+  ntAttribU1.isFloat = %<FixPt_DataTypeIsFloatingPoint( block, dataTypeIdU1 )>;
+  ntAttribU1.isSigned = %<loc_getSignedness( block, dataTypeIdU1 )>;
+  ntAttribU1.wordLength = %<loc_getWordLength( block, dataTypeIdU1 )>;
+  %%
+  ntAttribY0.isFloat = %<FixPt_DataTypeIsFloatingPoint( block, dataTypeIdY0 )>;
+  ntAttribY0.isSigned = %<loc_getSignedness( block, dataTypeIdY0 )>;
+  ntAttribY0.wordLength = %<loc_getWordLength( block, dataTypeIdY0 )>;
+  %%
+  func_core_hybrid_add_dispatch( 
+    %<labelForU0Addr>, %<labelForU1Addr>, %<labelForY0Addr>, 
+    &ntAttribU0, &ntAttribU1, &ntAttribY0);
+  %%
+  %% Close local scope
+  }
+  %%
+  %% blank line for formating
+
+%endfunction
