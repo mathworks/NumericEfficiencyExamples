@@ -13,8 +13,7 @@ function y = castToSymLossless(u)
     if ( isboolean(nt) || ...
             fixed.internal.type.isAnyFloat(nt) )
         u = double(u);
-        [vInt,vPow2Exp] = floatToIntExp(u);
-        y = sym(vInt).*2.^sym(vPow2Exp);
+        y = sym(u,'f');
     else
         u = fixed.internal.math.castIntToFi(u);
         storedInteger = stripscaling(u);

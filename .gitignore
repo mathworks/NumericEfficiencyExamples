@@ -34,4 +34,5 @@ rt_nonfinite.h
 rtwtypes.h
 **/*_rtw/*.bat
 **/*_rtw/*.mk
+.Rproj.user
 NotForPublic/

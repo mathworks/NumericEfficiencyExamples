@@ -9,6 +9,8 @@ function curVal = getValBasedOnOption(s,v)
         curVal = v.minBitSpanBinPt;
     end
     if s.Attrib.anyNegative && ('1' == curVal.bin(1))
-        curVal = fi(curVal,fixed.internal.type.sproutSignBit(curVal));
+        temp = fixed.internal.type.sproutSignBit(curVal);
+        nt = numerictype(temp);
+        curVal = fi(curVal,nt);
     end
 end

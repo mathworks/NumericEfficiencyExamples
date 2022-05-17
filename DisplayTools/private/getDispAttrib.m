@@ -26,7 +26,11 @@ function s = getDispAttrib(s)
             useBinPt = (~tooWide) || ...
                 ( s.dispAttrib.widthIntMantExp >= s.dispAttrib.widthBinPt);
             if useBinPt
+                if s.dispAttrib.binPtUnfriendly
+                    s.dispAttrib.dispFormat = 'IntMantExpAlign';
+                else
                 s.dispAttrib.dispFormat = 'BinPt';
+                end
             else
                 s.dispAttrib.dispFormat = 'IntMantExp';
             end
@@ -36,10 +40,13 @@ function s = getDispAttrib(s)
             s.dispAttrib.dispFormat = 'IntMantExpAlign';
         case 'Pedantic'
             s.dispAttrib.dispFormat = 'Pedantic';
+        case 'ScalingEq'
+            s.dispAttrib.dispFormat = 'ScalingEq';
         otherwise
             s.dispAttrib.dispFormat = 'BinPt';            
     end
      s.dispAttrib.useTrueBinPtDisp = strcmp(s.dispAttrib.dispFormat,'BinPt');
      s.dispAttrib.usePedantic = strcmp(s.dispAttrib.dispFormat,'Pedantic');
+     s.dispAttrib.useScalingEq = strcmp(s.dispAttrib.dispFormat,'ScalingEq');
      s.dispAttrib.doAlign = strcmp(s.dispAttrib.dispFormat,'IntMantExpAlign');     
 end

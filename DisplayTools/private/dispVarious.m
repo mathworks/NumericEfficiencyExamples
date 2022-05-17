@@ -7,26 +7,41 @@ function dispVarious(varargin)
     s.Attrib = objX;
     s.opt = objX.opt;
     s.vals = objX.vals;    
+        
+    s = determineNumCharsForTypeName(s);
     s = getDispAttrib(s);
     
     % Get maximum chars for real world value
     %
     s = determineNumCharsForRWV(s);
     
+
+    
+    if ~s.opt.InType
     if s.Attrib.anyNonFinite
         sFin = ' finite';
     else
         sFin = '';
     end
     
-    if s.Attrib.anyNegative
-        fprintf('\nBinary two''s complement encoding shown (some%s values are negative.)\n\n',sFin);
+        if s.Attrib.anyNegative
+            fprintf('\nBinary two''s complement encoding shown (some%s values are negative.)\n\n',sFin);
+        else
+            fprintf('\nBinary unsigned encoding shown (all%s values are non-negative.)\n\n',sFin);
+        end
+        
+    elseif ~s.dispAttrib.moreThanOneType
+        nt = s.vals(1).origType;
+        fprintf('\nData type is %s\n\n',nt.tostring);
     else
-        fprintf('\nBinary unsigned encoding shown (all%s values are non-negative.)\n\n',sFin);
+        fprintf('\n');
     end
-
+        
+        
     if s.dispAttrib.usePedantic
         s = dispPedanticHeader(s);
+    elseif s.dispAttrib.useScalingEq
+        s = dispScalingEqHeader(s);
     else
         % ToDo fix bug here not always binary point display
         %
@@ -47,6 +62,32 @@ function s = determineNumCharsForRWV(s)
     end
     s.dispAttrib.nCharsRWV = ncRWV;
 end
+
+
+function s = determineNumCharsForTypeName(s)
+    ncTN = 4;
+    ntFirst = [];
+    s.dispAttrib.moreThanOneType = false;
+    s.dispAttrib.binPtUnfriendly = false;
+    for i = 1:numel(s.vals)
+        nt = fixed.internal.type.extractNumericType(s.vals(i).origType);
+        if isempty(ntFirst)
+            ntFirst = nt;
+        elseif ~nt.isequivalent(ntFirst)
+            s.dispAttrib.moreThanOneType = true;
+        end
+        
+        if nt.isslopebiasscaled || nt.FractionLength < 0 || (nt.WordLength - nt.FractionLength) < 0
+             s.dispAttrib.binPtUnfriendly = true;
+        end
+        
+        %ntStr = nt.tostringInternalSlName;
+        ntStr = nt.tostring;
+        ncTN = max(ncTN,length(ntStr));
+    end
+    s.dispAttrib.nCharsTypeName = ncTN;
+end
+
 
 
 function rwvStr = fmtRWV(v)
@@ -149,25 +190,82 @@ function dispScalarPedantic(s,v)
 end
 
 
+function dispScalarScalingEq(s,v)
+    % binary point diplay of scalar
+    %    get integer and fraction bits
+    %    
+    
+    nt = v.origType;
+    if fixed.internal.type.isAnyFloatOrScaledDouble(nt)
+        uStr = fixed.internal.compactButAccurateNum2Str(v);
+    else
+        u = castIntToFi(v.origValue);
+        u = fixed.internal.math.castLogicalToUfix1(u);
+        
+        if u.issigned
+            binLabel = 'sbin';
+        else
+            binLabel = 'ubin';
+        end            
+            
+        uStr = sprintf('%s %s',u.bin,binLabel);
+        if 1 ~= nt.Slope
+            sStr = fixed.internal.compactButAccurateNum2Str(nt.Slope);
+            uStr = sprintf('%s * %s',uStr,sStr);
+        end
+        if 0 ~= nt.Bias
+            bStr = fixed.internal.compactButAccurateNum2Str(nt.Bias);
+            uStr = sprintf('%s + %s',uStr,bStr);
+        end
+    end
+    
+    %fmt = sprintf('%%%ds.%%-%ds\n',...
+    %    s.dispAttrib.binPtMaxPow2Wt+1,-s.dispAttrib.binPtMinPow2Wt);
+    
+    printRWV(s,1,fmtRWV(v));
+    fprintf('%s\n',uStr);
+end
+
+
 function s = dispBinHeader(s)
     % Header for binary display
     %    
     assert(~s.dispAttrib.usePedantic);
 
     bp = s.dispAttrib.useTrueBinPtDisp;
-    if bp
-        s1 = 'Binary Point';
-        s2 = '';
-    else
-        s1 = 'Integer Mantissa';
-        s2 = '    and Pow2 Exponent';
-    end    
+        if bp
+            s1 = 'Binary Point';
+            s2 = '';
+        else
+            s1 = 'Integer Mantissa';
+            s2 = '    and Pow2 Exponent';
+        end
+    
+    
+    printType(s,'Type');    
+    printRWV(s,0,'Real World');
+    fprintf('Notation: %s\n',s1)
+
+    printType(s,'');    
+    printRWV(s,0,'Value');
+    fprintf('  %s\n',s2);
+    end
+
+
+function s = dispScalingEqHeader(s)
+    % Header for scaling equation display
+    %    
+    assert(~s.dispAttrib.usePedantic);
+
+    s1 = 'Scaling Equation';
+    s2 = 'Q * Slope + Bias';
     
     printRWV(s,0,'Real World');
     fprintf('Notation: %s\n',s1)
     printRWV(s,0,'Value');
     fprintf('  %s\n',s2);
 end
+
 
 function s = dispPedanticHeader(s)
     % Pedantic binary display of scalar
@@ -245,6 +343,7 @@ function s = dispPedanticHeader(s)
     s.pedantic.p2Vec = p2Vec;
 end
 
+
 function n = getMaxCharsFor2ndRowValue(p2Hi,p2Lo)
 
     n = 4;
@@ -271,11 +370,15 @@ end
 function dispScalar(s,i)
     v = s.vals(i);
     
+    printTypeOfValue(s,v);
+    
     if isfinite(v.minBitSpanBinPt)        
         if s.dispAttrib.useTrueBinPtDisp
             dispScalarBinPt(s,v);
         elseif s.dispAttrib.usePedantic
             dispScalarPedantic(s,v);
+        elseif s.dispAttrib.useScalingEq
+            dispScalarScalingEq(s,v);                        
         else            
             dispScalarIntMantExp(s,v, s.dispAttrib.doAlign);
         end
@@ -295,3 +398,24 @@ function printRWV(s,useEqual,str)
         fprintf('   ');
     end
 end
+
+function printType(s,str)
+        
+    if s.opt.InType && s.dispAttrib.moreThanOneType
+        fprintf(' ');
+        numericDispUtil.printCenter(str,s.dispAttrib.nCharsTypeName);
+        fprintf(' ');
+    end
+end
+
+
+function printTypeOfValue(s,v)
+        
+    if s.opt.InType && s.dispAttrib.moreThanOneType
+        nt = fixed.internal.type.extractNumericType(v.origType);
+        %printType(s,nt.tostringInternalSlName);
+        printType(s,nt.tostring);
+    end
+end
+
+
