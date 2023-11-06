@@ -5,7 +5,6 @@ function dispSetOfValues(varargin)
     if ~exist('dispBinPtPreferInType','file')
         try
             mpath = fileparts(mfilename('fullpath'));
-            %mpath = [mpath,filesep,'..',filesep,'..',filesep,'DisplayTools'];
             mpath = [mpath,filesep,'..',filesep,'DisplayTools'];
             addpath(mpath)
         catch
@@ -14,8 +13,9 @@ function dispSetOfValues(varargin)
 
     if ~exist('getMatlabCoderLibConfig','file')
         try
-            p1 = 'D:\MW\OneDrive - MathWorks\GitLab_MathWorks_Local\TeamUtil';
-            addpath(p1)
+            mpath = fileparts(mfilename('fullpath'));
+            mpath = [mpath,filesep,'..',filesep,'Tools'];
+            addpath(mpath)
         catch
         end
     end
