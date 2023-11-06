@@ -1,0 +1,6 @@
+#ifndef EXFIXPTCASTSATNEARTIEAWAY_TYPES_H
+#define EXFIXPTCASTSATNEARTIEAWAY_TYPES_H
+
+#include "rtwtypes.h"
+
+#endif

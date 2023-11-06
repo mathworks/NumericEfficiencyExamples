@@ -1,4 +1,7 @@
 function showAllDisp(label,varargin)
+
+    % Copyright 2019-2023 The MathWorks, Inc.
+
     hr = repmat('-',40);
     fprintf('%s\n%s\n%s\n',hr,label,hr);
 

@@ -1,0 +1,8 @@
+#include "exFixptCastWrapNearTieAway.h"
+
+int8_T exFixptCastWrapNearTieAway(int16_T a)
+{
+  return (int8_T)(((int32_T)a >> 6) +
+                  ((((int32_T)a & 32) != 0) &&
+                   ((((int32_T)a & 31) != 0) || ((int32_T)a > 0))));
+}

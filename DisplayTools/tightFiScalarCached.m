@@ -1,6 +1,9 @@
 function y = tightFiScalarCached(u)
     % determine minium bit span for scalar value
     %
+
+    % Copyright 2019-2023 The MathWorks, Inc.
+
     funcHandle = memoize(@innerTightFi);
     funcHandle.CacheSize = 500;    
     y = funcHandle(u);

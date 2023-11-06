@@ -1,0 +1,6 @@
+#ifndef EXFIXPTAFFINEDOTPRODUCT_TYPES_H
+#define EXFIXPTAFFINEDOTPRODUCT_TYPES_H
+
+#include "rtwtypes.h"
+
+#endif

@@ -1,0 +1,6 @@
+#ifndef EXFIXPTCASTWRAPNEARTIEINF_TYPES_H
+#define EXFIXPTCASTWRAPNEARTIEINF_TYPES_H
+
+#include "rtwtypes.h"
+
+#endif

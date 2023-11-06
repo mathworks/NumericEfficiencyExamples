@@ -1,0 +1,6 @@
+#ifndef EXFIXPTCASTSATNEARTIEINF_TYPES_H
+#define EXFIXPTCASTSATNEARTIEINF_TYPES_H
+
+#include "rtwtypes.h"
+
+#endif

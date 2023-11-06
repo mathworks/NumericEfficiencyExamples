@@ -74,3 +74,7 @@ for i=1:numel(v0)
         fprintf('Lossless\n')
     end    
 end
+
+
+% Copyright 2019-2023 The MathWorks, Inc.
+

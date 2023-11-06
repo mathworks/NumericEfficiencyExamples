@@ -1,5 +1,8 @@
 function [v0,v1,v2] = showMulExtremes(nt1,nt2,doPrune)
    
+
+    % Copyright 2019-2023 The MathWorks, Inc.
+
     if ~exist('doPrune','var')
         doPrune = false;
     end
