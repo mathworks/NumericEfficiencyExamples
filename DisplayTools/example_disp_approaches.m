@@ -59,3 +59,4 @@ function [c,v] = cTight(c)
     v = fixed.internal.type.tightFi(v);
 end    
 
+% Copyright 2019-2023 The MathWorks, Inc.

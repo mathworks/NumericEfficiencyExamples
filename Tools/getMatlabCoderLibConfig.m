@@ -112,10 +112,10 @@ function cfg = getMatlabCoderLibConfig(useLongLong,useC99,use16BitInt)
     cfg.PurelyIntegerCode = false;
     cfg.SILPILSyncGlobalData = true;
     %---------------- Function Inlining and Stack Allocation ---------------
-    cfg.InlineStackLimit = 4000;
-    cfg.InlineThreshold = 10;
-    cfg.InlineThresholdMax = 200;
-    cfg.StackUsageMax = 200000;
+    %cfg.InlineStackLimit = 4000;
+    %cfg.InlineThreshold = 10;
+    %cfg.InlineThresholdMax = 200;
+    %cfg.StackUsageMax = 200000;
     %----------------------------- Optimizations ---------------------------
     cfg.ConvertIfToSwitch = false;
     cfg.EnableMemcpy = true;

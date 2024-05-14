@@ -4,12 +4,6 @@ function y = tightFiScalarCached(u)
 
     % Copyright 2019-2023 The MathWorks, Inc.
 
-    funcHandle = memoize(@innerTightFi);
-    funcHandle.CacheSize = 500;    
-    y = funcHandle(u);
-end
-
-function y = innerTightFi(u)
     % determine minium bit span for scalar value
     %
     validateattributes(u, {'numeric','embedded.fi','logical'},...

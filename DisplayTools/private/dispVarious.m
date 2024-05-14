@@ -18,11 +18,11 @@ function dispVarious(varargin)
 
     
     if ~s.opt.InType
-    if s.Attrib.anyNonFinite
-        sFin = ' finite';
-    else
-        sFin = '';
-    end
+        if s.Attrib.anyNonFinite
+            sFin = ' finite';
+        else
+            sFin = '';
+        end
     
         if s.Attrib.anyNegative
             fprintf('\nBinary two''s complement encoding shown (some%s values are negative.)\n\n',sFin);
@@ -233,13 +233,13 @@ function s = dispBinHeader(s)
     assert(~s.dispAttrib.usePedantic);
 
     bp = s.dispAttrib.useTrueBinPtDisp;
-        if bp
-            s1 = 'Binary Point';
-            s2 = '';
-        else
-            s1 = 'Integer Mantissa';
-            s2 = '    and Pow2 Exponent';
-        end
+    if bp
+        s1 = 'Binary Point';
+        s2 = '';
+    else
+        s1 = 'Integer Mantissa';
+        s2 = '    and Pow2 Exponent';
+    end    
     
     
     printType(s,'Type');    
@@ -249,7 +249,7 @@ function s = dispBinHeader(s)
     printType(s,'');    
     printRWV(s,0,'Value');
     fprintf('  %s\n',s2);
-    end
+end
 
 
 function s = dispScalingEqHeader(s)
